@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz Interaktif</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #ffedf2;
+        color: #333;
+      }
+
+      .container {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(255, 105, 180, 0.2);
+      }
+
+      h1 {
+        color: #d81b60;
+        text-align: center;
+        margin-bottom: 30px;
+        font-weight: bold;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      #start-screen,
+      #quiz-screen,
+      #result-screen,
+      #history-screen {
+        display: none;
+      }
+
+      #start-screen.active,
+      #quiz-screen.active,
+      #result-screen.active,
+      #history-screen.active {
+        display: block;
+      }
+
+      .options {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      button {
+        background-color: #ec407a;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      button:hover {
+        background-color: #d81b60;
+      }
+
+      .option {
+        background-color: #fce4ec;
+        padding: 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 1px solid #f8bbd0;
+      }
+
+      .option:hover {
+        background-color: #f8bbd0;
+        transform: translateY(-2px);
+      }
+
+      .selected {
+        background-color: #ec407a;
+        color: white;
+      }
+
+      .correct {
+        background-color: #66bb6a;
+        color: white;
+      }
+
+      .incorrect {
+        background-color: #ef5350;
+        color: white;
+      }
+
+      .stats {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        font-weight: bold;
+        color: #d81b60;
+      }
+
+      .progress-bar {
+        height: 10px;
+        background-color: #f8bbd0;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        overflow: hidden;
+      }
+
+      .progress {
+        height: 100%;
+        background-color: #ec407a;
+        width: 0%;
+        transition: width 0.3s;
+      }
+
+      #feedback {
+        text-align: center;
+        margin: 20px 0;
+        padding: 10px;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+
+      #result-screen h2 {
+        text-align: center;
+        color: #d81b60;
+      }
+
+      .score {
+        font-size: 36px;
+        text-align: center;
+        margin: 20px 0;
+        color: #d81b60;
+        font-weight: bold;
+      }
+
+      .category-select,
+      .difficulty-select,
+      .questions-select {
+        margin-bottom: 20px;
+        background-color: #fff;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(255, 105, 180, 0.15);
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #d81b60;
+      }
+
+      select {
+        width: 100%;
+        padding: 12px;
+        border-radius: 5px;
+        border: 1px solid #f8bbd0;
+        font-size: 16px;
+        background-color: #fff;
+        color: #333;
+        transition: all 0.3s;
+      }
+
+      select:focus {
+        border-color: #ec407a;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(236, 64, 122, 0.2);
+      }
+
+      .history-item {
+        background-color: #fce4ec;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        border-left: 4px solid #ec407a;
+      }
+
+      .history-item h3 {
+        color: #d81b60;
+        margin-top: 0;
+      }
+
+      .nav-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+      }
+
+      .loader {
+        border: 5px solid #f8bbd0;
+        border-top: 5px solid #ec407a;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      h2 {
+        color: #d81b60;
+      }
+
+      #question-text {
+        background-color: #fce4ec;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        border-left: 4px solid #ec407a;
+      }
+
+      #history-screen h2 {
+        color: #d81b60;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      #clear-history {
+        background-color: #f06292;
+      }
+
+      #clear-history:hover {
+        background-color: #e91e63;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>♥ Quiz Interaktif ♥</h1>
+
+      <!-- Start Screen -->
+      <div id="start-screen" class="active">
+        <div class="category-select">
+          <label for="category">Pilih Kategori:</label>
+          <select id="category">
+            <option value="">Semua Kategori</option>
+            <!-- Categories will be loaded dynamically -->
+          </select>
+        </div>
+
+        <div class="difficulty-select">
+          <label for="difficulty">Pilih Tingkat Kesulitan:</label>
+          <select id="difficulty">
+            <option value="">Semua</option>
+            <option value="easy">Mudah</option>
+            <option value="medium">Sedang</option>
+            <option value="hard">Sulit</option>
+          </select>
+        </div>
+
+        <div class="questions-select">
+          <label for="amount">Jumlah Pertanyaan:</label>
+          <select id="amount">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
+          </select>
+        </div>
+
+        <button id="start-button">Mulai Quiz</button>
+        <button id="show-history">Lihat Riwayat</button>
+      </div>
+
+      <!-- Quiz Screen -->
+      <div id="quiz-screen">
+        <div class="stats">
+          <div>Pertanyaan: <span id="current-question">1</span>/<span id="total-questions">10</span></div>
+          <div>Skor: <span id="current-score">0</span></div>
+        </div>
+
+        <div class="progress-bar">
+          <div class="progress" id="progress"></div>
+        </div>
+
+        <div id="loading">
+          <div class="loader"></div>
+          <p class="text-center">Memuat pertanyaan...</p>
+        </div>
+
+        <div id="question-container">
+          <h2 id="question-text">Loading question...</h2>
+          <div class="options" id="options-container"></div>
+        </div>
+
+        <div id="feedback"></div>
+
+        <button id="next-button" style="display: none">Pertanyaan Selanjutnya</button>
+      </div>
+
+      <!-- Result Screen -->
+      <div id="result-screen">
+        <h2>Quiz Selesai!</h2>
+        <div class="score">Skor Akhir: <span id="final-score">0</span>/<span id="max-score">10</span></div>
+        <p id="result-message"></p>
+        <div class="nav-buttons">
+          <button id="play-again">Main Lagi</button>
+          <button id="view-history">Lihat Riwayat</button>
+        </div>
+      </div>
+
+      <!-- History Screen -->
+      <div id="history-screen">
+        <h2>Riwayat Quiz</h2>
+        <div id="history-container"></div>
+        <div class="nav-buttons">
+          <button id="back-button">Kembali</button>
+          <button id="clear-history">Hapus Riwayat</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Class for questions
+      class Question {
+        constructor(questionData) {
+          this.question = questionData.question;
+          this.correctAnswer = questionData.correct_answer;
+          this.options = this.shuffleOptions([...questionData.incorrect_answers, questionData.correct_answer]);
+          this.category = questionData.category;
+          this.difficulty = questionData.difficulty;
+          this.userAnswer = null;
+          this.isCorrect = false;
+        }
+
+        shuffleOptions(options) {
+          for (let i = options.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [options[i], options[j]] = [options[j], options[i]];
+          }
+          return options;
+        }
+
+        checkAnswer(selectedAnswer) {
+          this.userAnswer = selectedAnswer;
+          this.isCorrect = selectedAnswer === this.correctAnswer;
+          return this.isCorrect;
+        }
+
+        getCorrectAnswerIndex() {
+          return this.options.indexOf(this.correctAnswer);
+        }
+      }
+
+      // Class for Quiz
+      class Quiz {
+        constructor() {
+          this.questions = [];
+          this.currentQuestionIndex = 0;
+          this.score = 0;
+          this.category = "";
+          this.difficulty = "";
+          this.amount = 10;
+          this.dateTime = new Date();
+        }
+
+        async fetchQuestions() {
+          try {
+            let apiUrl = `https://opentdb.com/api.php?amount=${this.amount}&encode=base64`;
+
+            if (this.category) {
+              apiUrl += `&category=${this.category}`;
+            }
+
+            if (this.difficulty) {
+              apiUrl += `&difficulty=${this.difficulty}`;
+            }
+
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+
+            if (data.response_code === 0) {
+              // Decode base64 encoded strings
+              this.questions = data.results.map((questionData) => {
+                return new Question({
+                  question: this.decodeBase64(questionData.question),
+                  correct_answer: this.decodeBase64(questionData.correct_answer),
+                  incorrect_answers: questionData.incorrect_answers.map((answer) => this.decodeBase64(answer)),
+                  category: this.decodeBase64(questionData.category),
+                  difficulty: this.decodeBase64(questionData.difficulty),
+                });
+              });
+              return true;
+            }
+            return false;
+          } catch (error) {
+            console.error("Error fetching questions:", error);
+            return false;
+          }
+        }
+
+        decodeBase64(encodedString) {
+          return decodeURIComponent(atob(encodedString));
+        }
+
+        getCurrentQuestion() {
+          return this.questions[this.currentQuestionIndex];
+        }
+
+        nextQuestion() {
+          this.currentQuestionIndex++;
+          return this.currentQuestionIndex < this.questions.length;
+        }
+
+        submitAnswer(selectedAnswer) {
+          const currentQuestion = this.getCurrentQuestion();
+          const isCorrect = currentQuestion.checkAnswer(selectedAnswer);
+
+          if (isCorrect) {
+            this.score++;
+          }
+
+          return isCorrect;
+        }
+
+        isLastQuestion() {
+          return this.currentQuestionIndex === this.questions.length - 1;
+        }
+
+        getProgress() {
+          return ((this.currentQuestionIndex + 1) / this.questions.length) * 100;
+        }
+
+        getQuizSummary() {
+          return {
+            score: this.score,
+            totalQuestions: this.questions.length,
+            category: this.category ? this.categoryName : "Semua Kategori",
+            difficulty: this.difficulty ? this.capitalizeDifficulty(this.difficulty) : "Semua",
+            date: this.dateTime.toLocaleString(),
+            percentage: (this.score / this.questions.length) * 100,
+          };
+        }
+
+        capitalizeDifficulty(difficulty) {
+          switch (difficulty) {
+            case "easy":
+              return "Mudah";
+            case "medium":
+              return "Sedang";
+            case "hard":
+              return "Sulit";
+            default:
+              return difficulty;
+          }
+        }
+      }
+
+      // Class for Quiz History using Local Storage
+      class QuizHistory {
+        constructor() {
+          this.storageKey = "quizHistory";
+        }
+
+        saveQuiz(quizSummary) {
+          const history = this.getHistory();
+          history.push(quizSummary);
+          localStorage.setItem(this.storageKey, JSON.stringify(history));
+        }
+
+        getHistory() {
+          const history = localStorage.getItem(this.storageKey);
+          return history ? JSON.parse(history) : [];
+        }
+
+        clearHistory() {
+          localStorage.removeItem(this.storageKey);
+        }
+      }
+
+      // Main application
+      document.addEventListener("DOMContentLoaded", () => {
+        // DOM Elements
+        const startScreen = document.getElementById("start-screen");
+        const quizScreen = document.getElementById("quiz-screen");
+        const resultScreen = document.getElementById("result-screen");
+        const historyScreen = document.getElementById("history-screen");
+
+        const categorySelect = document.getElementById("category");
+        const difficultySelect = document.getElementById("difficulty");
+        const amountSelect = document.getElementById("amount");
+        const startButton = document.getElementById("start-button");
+        const showHistoryButton = document.getElementById("show-history");
+
+        const currentQuestionElem = document.getElementById("current-question");
+        const totalQuestionsElem = document.getElementById("total-questions");
+        const currentScoreElem = document.getElementById("current-score");
+        const progressBar = document.getElementById("progress");
+
+        const questionContainer = document.getElementById("question-container");
+        const loadingContainer = document.getElementById("loading");
+        const questionText = document.getElementById("question-text");
+        const optionsContainer = document.getElementById("options-container");
+        const feedbackElem = document.getElementById("feedback");
+        const nextButton = document.getElementById("next-button");
+
+        const finalScoreElem = document.getElementById("final-score");
+        const maxScoreElem = document.getElementById("max-score");
+        const resultMessageElem = document.getElementById("result-message");
+        const playAgainButton = document.getElementById("play-again");
+        const viewHistoryButton = document.getElementById("view-history");
+
+        const historyContainer = document.getElementById("history-container");
+        const backButton = document.getElementById("back-button");
+        const clearHistoryButton = document.getElementById("clear-history");
+
+        // Initialize quiz and history
+        const quiz = new Quiz();
+        const quizHistory = new QuizHistory();
+
+        // Fetch categories on load
+        async function fetchCategories() {
+          try {
+            const response = await fetch("https://opentdb.com/api_category.php");
+            const data = await response.json();
+
+            data.trivia_categories.forEach((category) => {
+              const option = document.createElement("option");
+              option.value = category.id;
+              option.textContent = category.name;
+              categorySelect.appendChild(option);
+            });
+          } catch (error) {
+            console.error("Error fetching categories:", error);
+          }
+        }
+
+        fetchCategories();
+
+        // Show active screen
+        function showScreen(screen) {
+          startScreen.classList.remove("active");
+          quizScreen.classList.remove("active");
+          resultScreen.classList.remove("active");
+          historyScreen.classList.remove("active");
+
+          screen.classList.add("active");
+        }
+
+        // Initialize the Quiz
+        async function initQuiz() {
+          // Set quiz parameters
+          quiz.category = categorySelect.value;
+          quiz.difficulty = difficultySelect.value;
+          quiz.amount = parseInt(amountSelect.value);
+          quiz.categoryName = categorySelect.options[categorySelect.selectedIndex].textContent;
+          quiz.dateTime = new Date();
+
+          // Show loading state
+          showScreen(quizScreen);
+          questionContainer.style.display = "none";
+          loadingContainer.style.display = "block";
+
+          // Fetch questions
+          const success = await quiz.fetchQuestions();
+
+          if (success) {
+            // Hide loading state
+            loadingContainer.style.display = "none";
+            questionContainer.style.display = "block";
+
+            // Reset quiz state
+            quiz.currentQuestionIndex = 0;
+            quiz.score = 0;
+
+            // Update UI
+            totalQuestionsElem.textContent = quiz.questions.length;
+            updateQuestionDisplay();
+          } else {
+            alert("Gagal mengambil pertanyaan dari API. Silakan coba lagi.");
+            showScreen(startScreen);
+          }
+        }
+
+        // Display current question
+        function updateQuestionDisplay() {
+          const currentQuestion = quiz.getCurrentQuestion();
+
+          // Update question counter and score
+          currentQuestionElem.textContent = quiz.currentQuestionIndex + 1;
+          currentScoreElem.textContent = quiz.score;
+
+          // Update progress bar
+          progressBar.style.width = `${quiz.getProgress()}%`;
+
+          // Display question
+          questionText.innerHTML = currentQuestion.question;
+
+          // Display options
+          optionsContainer.innerHTML = "";
+          currentQuestion.options.forEach((option, index) => {
+            const optionElem = document.createElement("div");
+            optionElem.className = "option";
+            optionElem.textContent = option;
+            optionElem.dataset.index = index;
+            optionElem.addEventListener("click", handleOptionClick);
+            optionsContainer.appendChild(optionElem);
+          });
+
+          // Reset UI elements
+          feedbackElem.innerHTML = "";
+          feedbackElem.style.backgroundColor = "";
+          nextButton.style.display = "none";
+        }
+
+        // Handle answer selection
+        function handleOptionClick(event) {
+          if (feedbackElem.innerHTML !== "") return; // Prevent multiple selections
+
+          const selectedOption = event.target;
+          const selectedAnswer = selectedOption.textContent;
+          const isCorrect = quiz.submitAnswer(selectedAnswer);
+
+          // Update UI based on correctness
+          if (isCorrect) {
+            selectedOption.classList.add("correct");
+            feedbackElem.innerHTML = "Benar!";
+            feedbackElem.style.backgroundColor = "#66bb6a";
+          } else {
+            selectedOption.classList.add("incorrect");
+
+            // Highlight correct answer
+            const correctIndex = quiz.getCurrentQuestion().getCorrectAnswerIndex();
+            const options = optionsContainer.querySelectorAll(".option");
+            options[correctIndex].classList.add("correct");
+
+            feedbackElem.innerHTML = "Salah!";
+            feedbackElem.style.backgroundColor = "#ef5350";
+          }
+
+          // Update score
+          currentScoreElem.textContent = quiz.score;
+
+          // Disable all options
+          const options = optionsContainer.querySelectorAll(".option");
+          options.forEach((option) => {
+            option.removeEventListener("click", handleOptionClick);
+            option.style.cursor = "default";
+          });
+
+          // Show next button or finish button
+          nextButton.style.display = "block";
+          nextButton.textContent = quiz.isLastQuestion() ? "Selesai" : "Pertanyaan Selanjutnya";
+        }
+
+        // Move to next question
+        function handleNextQuestion() {
+          if (quiz.isLastQuestion()) {
+            finishQuiz();
+          } else {
+            quiz.nextQuestion();
+            updateQuestionDisplay();
+          }
+        }
+
+        // Finish the quiz and show results
+        function finishQuiz() {
+          const summary = quiz.getQuizSummary();
+
+          // Save to history
+          quizHistory.saveQuiz(summary);
+
+          // Update result screen
+          finalScoreElem.textContent = summary.score;
+          maxScoreElem.textContent = summary.totalQuestions;
+
+          // Set result message based on score percentage
+          const percentage = summary.percentage;
+          let message = "";
+
+          if (percentage >= 90) {
+            message = "Luar biasa! Kamu sangat menguasai materi ini!";
+          } else if (percentage >= 70) {
+            message = "Bagus sekali! Kamu memiliki pemahaman yang baik!";
+          } else if (percentage >= 50) {
+            message = "Cukup baik! Teruslah belajar!";
+          } else {
+            message = "Jangan menyerah! Coba lagi untuk hasil yang lebih baik!";
+          }
+
+          resultMessageElem.textContent = message;
+
+          // Show result screen
+          showScreen(resultScreen);
+        }
+
+        // Display quiz history
+        function showHistory() {
+          const history = quizHistory.getHistory();
+          historyContainer.innerHTML = "";
+
+          if (history.length === 0) {
+            historyContainer.innerHTML = "<p>Belum ada riwayat quiz.</p>";
+          } else {
+            history.reverse().forEach((item, index) => {
+              const historyItem = document.createElement("div");
+              historyItem.className = "history-item";
+
+              historyItem.innerHTML = `
+                <h3>Quiz #${history.length - index}</h3>
+                <p>Tanggal: ${item.date}</p>
+                <p>Kategori: ${item.category}</p>
+                <p>Tingkat Kesulitan: ${item.difficulty}</p>
+                <p>Skor: ${item.score}/${item.totalQuestions} (${item.percentage.toFixed(1)}%)</p>
+              `;
+
+              historyContainer.appendChild(historyItem);
+            });
+          }
+
+          showScreen(historyScreen);
+        }
+
+        // Event listeners
+        startButton.addEventListener("click", initQuiz);
+        showHistoryButton.addEventListener("click", showHistory);
+        nextButton.addEventListener("click", handleNextQuestion);
+        playAgainButton.addEventListener("click", () => showScreen(startScreen));
+        viewHistoryButton.addEventListener("click", showHistory);
+        backButton.addEventListener("click", () => showScreen(startScreen));
+
+        clearHistoryButton.addEventListener("click", () => {
+          if (confirm("Apakah Anda yakin ingin menghapus semua riwayat quiz?")) {
+            quizHistory.clearHistory();
+            showHistory();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
